@@ -9,6 +9,8 @@ from anthropic import Anthropic
 # Configuration
 API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 TASK_FILE = "task.yaml"
+# Using the most universally available Sonnet 3.5 model
+MODELS = ["claude-3-5-sonnet-20240620", "claude-3-5-sonnet-latest", "claude-3-sonnet-20240229"]
 
 def log_jsonl(entry):
     with open("agent.log", "a") as f:
@@ -50,16 +52,25 @@ def call_anthropic(client, messages, system_prompt):
     
     log_jsonl({"timestamp": get_timestamp(), "type": "request", "content": str(messages[-1]['content'])})
     
-    response = client.messages.create(
-        model="claude-3-5-sonnet-20241022",
-        max_tokens=4096,
-        system=system_prompt,
-        messages=messages,
-        tools=tools
-    )
-    
-    log_jsonl({"timestamp": get_timestamp(), "type": "response", "content": str(response.content)})
-    return response
+    # Try models in order until one works (handles 404/NotFoundError)
+    for model_name in MODELS:
+        try:
+            print(f"Attempting to call Anthropic with model: {model_name}")
+            response = client.messages.create(
+                model=model_name,
+                max_tokens=4096,
+                system=system_prompt,
+                messages=messages,
+                tools=tools
+            )
+            log_jsonl({"timestamp": get_timestamp(), "type": "response", "content": str(response.content)})
+            return response
+        except Exception as e:
+            print(f"Error with model {model_name}: {e}")
+            if "not_found_error" in str(e).lower() or "not found" in str(e).lower():
+                continue
+            raise e
+    raise Exception("No available models found")
 
 def main():
     if not API_KEY:
@@ -75,24 +86,29 @@ def main():
     out, _ = run_bash(test_cmd)
     with open("pre_verification.log", "w") as f: f.write(out)
 
-    system_prompt = f"Fix OpenLibrary ISBN logic. Edit openlibrary/core/imports.py to use local staged records. Introduce STAGED_SOURCES = ('amazon', 'idb')."
-    messages = [{"role": "user", "content": f"Tests failing:\n{out}\nFix the logic."}]
+    system_prompt = f"Fix OpenLibrary ISBN logic. Edit openlibrary/core/imports.py to use local staged records. Introduce STAGED_SOURCES = ('amazon', 'idb'). Ensure you use tools to apply changes."
+    messages = [{"role": "user", "content": f"Tests failing:\n{out}\nPlease fix the logic to use local staged records instead of external API calls."}]
     
-    for _ in range(5):
-        res = call_anthropic(client, messages, system_prompt)
-        messages.append({"role": "assistant", "content": res.content})
-        
-        tool_calls = [c for c in res.content if c.type == 'tool_use']
-        if not tool_calls: break
-        
-        tool_res = []
-        for tc in tool_calls:
-            n, a, tid = tc.name, tc.input, tc.id
-            if n == "run_bash": val, err = run_bash(a['command'])
-            elif n == "read_file": val, err = read_file(a['path'])
-            elif n == "write_file": val, err = write_file(a['path'], a['content'])
-            tool_res.append({"type": "tool_result", "tool_use_id": tid, "content": str(val or err)})
-        messages.append({"role": "user", "content": tool_res})
+    for i in range(5):
+        try:
+            res = call_anthropic(client, messages, system_prompt)
+            messages.append({"role": "assistant", "content": res.content})
+            
+            tool_calls = [c for c in res.content if c.type == 'tool_use']
+            if not tool_calls: break
+            
+            tool_res = []
+            for tc in tool_calls:
+                n, a, tid = tc.name, tc.input, tc.id
+                print(f"Agent using tool: {n}")
+                if n == "run_bash": val, err = run_bash(a['command'])
+                elif n == "read_file": val, err = read_file(a['path'])
+                elif n == "write_file": val, err = write_file(a['path'], a['content'])
+                tool_res.append({"type": "tool_result", "tool_use_id": tid, "content": str(val or err)})
+            messages.append({"role": "user", "content": tool_res})
+        except Exception as e:
+            print(f"Error in agent loop: {e}")
+            break
 
     print("Post-verification...")
     out, _ = run_bash(test_cmd)
@@ -103,6 +119,14 @@ def main():
     
     with open("prompts.md", "w") as f:
         f.write("# Engineering History\n\n")
-        for m in messages: f.write(f"## {m['role'].upper()}\n\n{str(m['content'])}\n\n")
+        for m in messages:
+            role = m['role'].upper()
+            content = m['content']
+            if isinstance(content, list):
+                # Format tool calls/results for clarity
+                str_content = json.dumps([str(c) for c in content], indent=2)
+            else:
+                str_content = str(content)
+            f.write(f"## {role}\n\n{str_content}\n\n")
 
 if __name__ == "__main__": main()
