@@ -132,11 +132,7 @@ The workflow generates **6 mandatory artifacts** for evaluation:
 | `pre_verification.log` | Text | Test output before fix (should fail) | ✅ Working |
 | `post_verification.log` | Text | Test output after fix (should pass) | ✅ Working |
 | `changes.patch` | Git Diff | Code changes made by AI | ✅ Working |
-| `prompts.log` | JSONL | All prompts and responses | ✅ Implemented |
-
-**Bonus artifacts**:
-- `prompts.md` - Human-readable prompts (optional)
-- `patch_error.log` - Error details if patch fails (debugging)
+| `prompts.md` | Markdown | Human-readable AI dialogue history | ✅ Implemented |
 
 ---
 
