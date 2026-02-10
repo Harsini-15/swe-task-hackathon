@@ -12,8 +12,8 @@ git reset --hard 84cc4ed5697b83a849e9106a09bfed501169cc20
 git clean -fd
 git checkout c4eebe6677acc4629cb541a98d5e91311444f5d4 -- openlibrary/tests/core/test_imports.py
 
-# Install missing dependencies found in logs
-echo "Installing missing dependencies..."
-pip install web.py pytest-mock pyyaml
+# Install all necessary dependencies including the official AI client
+echo "Installing dependencies..."
+pip install web.py pytest-mock pyyaml anthropic requests
 
 echo "Setup complete."
