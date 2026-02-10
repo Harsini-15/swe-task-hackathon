@@ -7,17 +7,16 @@ git clone https://github.com/internetarchive/openlibrary.git /testbed
 cd /testbed
 git config --global --add safe.directory /testbed
 
-# Specific commit requirements from task.yaml
+# RESET to the exact base commit to ensure a clean PRE-verification
 git reset --hard 84cc4ed5697b83a849e9106a09bfed501169cc20
 git clean -fd
+# Checkout the specific test file for this task
 git checkout c4eebe6677acc4629cb541a98d5e91311444f5d4 -- openlibrary/tests/core/test_imports.py
 
-# CRITICAL dependency install
-echo "Installing base dependencies..."
+# Install all dependencies needed for the tests to run
+echo "Installing dependencies..."
 pip install --upgrade pip
-# Added python-memcached for the memcache module
 pip install web.py pytest-mock pyyaml anthropic requests inflect psycopg2-binary simplejson ujson cached-property python-memcached
-# Infogami often needs to be installed from the source if pypi fails
-pip install git+https://github.com/internetarchive/infogami.git || pip install infogami || echo "Infogami install failed, continuing..."
+pip install git+https://github.com/internetarchive/infogami.git || echo "Infogami found or failed"
 
 echo "Setup complete."
