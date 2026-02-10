@@ -7,6 +7,8 @@
 
 > **Automated AI-powered bug fixing system for the SWE-bench Pro evaluation benchmark**
 
+![Project Overview](docs/images/repo_overview.png)
+
 ---
 
 ## 📖 Description
@@ -95,6 +97,8 @@ git push origin main
 4. Select branch: `main`
 5. Click **"Run workflow"** to start
 
+![Workflow Success](docs/images/workflow_success.png)
+
 ### Step 4: Monitor Progress
 
 1. Click on the running workflow to see live logs
@@ -107,6 +111,8 @@ git push origin main
 2. Download **"evaluation-artifacts.zip"**
 3. Extract and review all 6 generated files
 
+![Artifacts Download](docs/images/artifacts_section.png)
+
 ---
 
 ## ✨ Features
@@ -115,6 +121,8 @@ git push origin main
 - **Autonomous bug fixing** using Claude 3.5 Sonnet with tool use
 - **Context-aware solutions** based on codebase analysis
 - **Iterative refinement** with error feedback loops
+
+![Code Changes](docs/images/changes_patch.png)
 
 ### 🔍 Comprehensive Testing
 - **Pre-verification**: Confirms bug exists (tests fail)
@@ -129,6 +137,8 @@ git push origin main
 
 ### 📦 Complete Artifact Generation
 All 6 required hackathon artifacts automatically generated:
+
+![Result Metrics](docs/images/result_json.png)
 
 | Artifact | Description | Format |
 |----------|-------------|--------|
