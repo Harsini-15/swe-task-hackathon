@@ -69,7 +69,7 @@ graph LR
 ├── .github/
 │   └── workflows/
 │       └── swebench-eval.yml    # Main GitHub Actions workflow
-├── run_claude.py                 # AI agent integration (Claude Sonnet)
+├── run_agent.py                 # AI agent integration (Claude 3.5 Sonnet w/ Tools)
 ├── extract_metrics.py            # Metrics extraction and result.json generation
 ├── task.yaml                     # Task configuration and requirements
 ├── TASK_README.md               # Detailed hackathon instructions
@@ -151,8 +151,9 @@ The workflow generates **6 mandatory artifacts** for evaluation:
 
 ### AI Agent Integration
 
-Current implementation uses **Claude Sonnet** with:
-- Model fallback strategy (Haiku → Sonnet 3.5 → Sonnet 3 → Opus)
+Current implementation uses **Claude 3.5 Sonnet** with:
+- **Autonomous Tool Use**: Agent can read/write files and run bash commands
+- Model fallback strategy
 - Comprehensive JSONL logging
 - Token counting and cost tracking
 - Error handling with detailed feedback

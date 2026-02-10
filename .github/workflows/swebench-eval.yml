@@ -12,35 +12,31 @@ permissions:
 jobs:
   swe-bench-eval:
     runs-on: ubuntu-latest
-
+    container:
+      image: manojva/openlibrary-python312:latest
+      options: --user root
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install Agent Dependencies
-        run: |
-          pip install requests pyyaml
-
+      # Note: Python and dependencies are pre-installed in the container
+      
       - name: Setup Target Repository
         run: |
-          sudo rm -rf /testbed
-          sudo git clone https://github.com/internetarchive/openlibrary.git /testbed
-          sudo chown -R $USER:$USER /testbed
+          rm -rf /testbed
+          git clone https://github.com/internetarchive/openlibrary.git /testbed
           cd /testbed
           git config --global --add safe.directory /testbed
           git reset --hard 84cc4ed5697b83a849e9106a09bfed501169cc20
+          # Checkout the test file from the problem commit
+          git checkout c4eebe6677acc4629cb541a98d5e91311444f5d4 -- openlibrary/tests/core/test_imports.py
 
-      - name: Run AI Agent (Claude)
+      - name: Run AI Agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          python run_claude.py
+          python run_agent.py
 
       - name: Extract Metrics
         if: always()
